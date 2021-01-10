@@ -17,7 +17,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(title: 'BPMを設定出来るようにする'),
+      home: Home(title: '規定数繰り返したら自動で加速する'),
     );
   }
 }
@@ -34,6 +34,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   ByteData sound;
+  int _stepSize = 10; // 何BPM加速するか
+  int _bar = 2; // 何小節で1ループとするか
   int _tempo = 120;
   bool _run = false;
   Soundpool pool = Soundpool(streamType: StreamType.alarm);
@@ -54,10 +56,17 @@ class _HomeState extends State<Home> {
     int soundId = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
       return pool.load(soundData);
     });
+    var count = 0;
     while(_run) {
       waitTime  = 60000 ~/ _tempo;
       await pool.play(soundId);
       await Future.delayed(Duration(milliseconds: waitTime));
+      count++;
+      // TODO: 4分の4拍子以外の対応
+      if (count == _bar * 4) {
+        setState(() => _tempo = _tempo + _stepSize);
+        count = 0;
+      }
     }
   }
 
@@ -72,6 +81,29 @@ class _HomeState extends State<Home> {
 
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Spacer(),
+                Text(
+                  'ステップ: ',
+                ),
+                Text(
+                  '$_stepSize BPM',
+                  style: Theme.of(context).textTheme.headline5,
+                ),
+                Spacer(),
+                Text(
+                  'メロディの長さ: ',
+                ),
+                Text(
+                  '$_bar小節',
+                  style: Theme.of(context).textTheme.headline5,
+                ),
+                Spacer(),
+              ],
+            ),
+            Container(height: 100,),
             Text(
               'BPM: ',
             ),
