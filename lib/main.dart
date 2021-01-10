@@ -17,7 +17,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(title: 'とりあえず音を出す'),
+      home: Home(title: 'メトロノームのオンオフとして動かす'),
     );
   }
 }
@@ -34,28 +34,32 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   ByteData sound;
-  int _counter = 0;
+  int _tempo = 120;
+  bool _run = false;
   Soundpool pool = Soundpool(streamType: StreamType.alarm);
 
+  void _toggleMetronome() {
+    if (_run) {
+      setState(() => _run = false);
+    }
+    else {
+      setState(() => _run = true);
+      _runMetronome(_tempo);
+    }
+  }
+
   /// 無限ループさせる
-  Future<void> runMetronome(int bpm) async {
+  Future<void> _runMetronome(int bpm) async {
     int soundId = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
       return pool.load(soundData);
     });
     var waitTime  = 60000 ~/ bpm;
     print(waitTime);
 
-    for (int i = 0; i < 100; i++) {
+    while(_run) {
       await pool.play(soundId);
       await Future.delayed(Duration(milliseconds: waitTime));
     }
-  }
-
-  void _incrementCounter()  {
-    runMetronome(200);
-    setState(() {
-      _counter++;
-    });
   }
 
   @override
@@ -70,17 +74,17 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'You have pushed the button this many times:',
+              'BPM: ',
             ),
             Text(
-              '$_counter',
+              '$_tempo',
               style: Theme.of(context).textTheme.headline4,
             ),
             FlatButton(
-              child: const Text('Button'),
+              child: const Text('ON / OFF'),
               color: Colors.orange,
               textColor: Colors.white,
-              onPressed: _incrementCounter,
+              onPressed: _toggleMetronome,
             ),
           ],
         ),
