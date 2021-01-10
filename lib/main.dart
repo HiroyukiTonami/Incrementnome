@@ -1,7 +1,7 @@
 import 'dart:typed_data';
-import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:soundpool/soundpool.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,22 +35,24 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   ByteData sound;
   int _counter = 0;
+  Soundpool pool = Soundpool(streamType: StreamType.alarm);
 
   /// 無限ループさせる
   Future<void> runMetronome(int bpm) async {
-    AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer();
-    var audio = Audio('assets/sound/hammer.wav');
+    int soundId = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
+      return pool.load(soundData);
+    });
     var waitTime  = 60000 ~/ bpm;
     print(waitTime);
 
-    for (int i = 0; i < 20; i++) {
-      await assetsAudioPlayer.open(audio);
+    for (int i = 0; i < 100; i++) {
+      await pool.play(soundId);
       await Future.delayed(Duration(milliseconds: waitTime));
     }
   }
 
   void _incrementCounter()  {
-    runMetronome(120);
+    runMetronome(200);
     setState(() {
       _counter++;
     });
