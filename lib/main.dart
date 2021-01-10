@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soundpool/soundpool.dart';
@@ -17,7 +18,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(title: '規定数繰り返したら自動で加速する'),
+      home: Home(title: '各パラメータを設定出来る'),
     );
   }
 }
@@ -33,9 +34,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  ByteData sound;
   int _stepSize = 10; // 何BPM加速するか
-  int _bar = 2; // 何小節で1ループとするか
+  int _bar = 4; // 何小節で1ループとするか
+  int _startTempo = 120; // どこから始めるか
+  int _maxTempo = 180; // どこまで加速するか
   int _tempo = 120;
   bool _run = false;
   Soundpool pool = Soundpool(streamType: StreamType.alarm);
@@ -63,11 +65,21 @@ class _HomeState extends State<Home> {
       await Future.delayed(Duration(milliseconds: waitTime));
       count++;
       // TODO: 4分の4拍子以外の対応
-      if (count == _bar * 4) {
+      if (_tempo < _maxTempo && count == _bar * 4) {
         setState(() => _tempo = _tempo + _stepSize);
         count = 0;
       }
     }
+  }
+
+  /// cupatinoPickerの子供として設定すると自然に見えるウィジェットを作る
+  Widget cupatinoPickerChild(String text) {
+    return Center(
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+      )
+    );
   }
 
   @override
@@ -88,22 +100,102 @@ class _HomeState extends State<Home> {
                 Text(
                   'ステップ: ',
                 ),
+                Container(
+                  height: 70,
+                  width: 50,
+                  child: CupertinoPicker(
+                    itemExtent: 40,
+                    children: List.generate(10, (i)=> cupatinoPickerChild((i+1).toString())),
+                    scrollController: FixedExtentScrollController(initialItem: _stepSize-1),
+                    onSelectedItemChanged: (int value) {
+                      setState(() {
+                        _stepSize = value+1;
+                      });
+                    },
+                  ),
+                ),
                 Text(
-                  '$_stepSize BPM',
+                  'BPM',
                   style: Theme.of(context).textTheme.headline5,
                 ),
                 Spacer(),
                 Text(
-                  'メロディの長さ: ',
+                  '長さ: ',
+                ),
+                Container(
+                  height: 70,
+                  width: 50,
+                  child: CupertinoPicker(
+                    itemExtent: 40,
+                    children: List.generate(20, (i)=> cupatinoPickerChild((i+1).toString())),
+                    scrollController: FixedExtentScrollController(initialItem: _bar-1),
+                    onSelectedItemChanged: (int value) {
+                      setState(() {
+                        _bar = value+1;
+                      });
+                    },
+                  ),
                 ),
                 Text(
-                  '$_bar小節',
+                  '小節',
                   style: Theme.of(context).textTheme.headline5,
                 ),
                 Spacer(),
               ],
             ),
             Container(height: 100,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Spacer(),
+                Text(
+                  'スタート: ',
+                ),
+                Container(
+                  height: 70,
+                  width: 50,
+                  child: CupertinoPicker(
+                    itemExtent: 40,
+                    children: List.generate(200, (i)=> cupatinoPickerChild((i+1).toString())),
+                    scrollController: FixedExtentScrollController(initialItem: _startTempo-1),
+                    onSelectedItemChanged: (int value) {
+                      setState(() {
+                        _startTempo = value+1;
+                      });
+                    },
+                  ),
+                ),
+                Text(
+                  'BPM',
+                  style: Theme.of(context).textTheme.headline5,
+                ),
+                Spacer(),
+                Text(
+                  'エンド: ',
+                ),
+                Container(
+                  height: 70,
+                  width: 50,
+                  child: CupertinoPicker(
+                    itemExtent: 40,
+                    children: List.generate(200, (i)=> cupatinoPickerChild((i+1).toString())),
+                    scrollController: FixedExtentScrollController(initialItem: _maxTempo-1),
+                    onSelectedItemChanged: (int value) {
+                      setState(() {
+                        _maxTempo = value+1;
+                      });
+                    },
+                  ),
+                ),
+                Text(
+                  'BPM',
+                  style: Theme.of(context).textTheme.headline5,
+                ),
+                Spacer(),
+              ],
+            ),
+            Container(height: 100,),
+
             Text(
               'BPM: ',
             ),
@@ -113,7 +205,7 @@ class _HomeState extends State<Home> {
             ),
             Slider(
               value: _tempo.toDouble(),
-              min: 10,
+              min: 1,
               max: 200,
               divisions: 200,
               label: _tempo.toString(),
