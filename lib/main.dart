@@ -34,7 +34,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  int _stepSize = 10; // 何BPM加速するか
+  int _stepSize = 5; // 何BPM加速するか
   int _bar = 4; // 何小節で1ループとするか
   int _startTempo = 120; // どこから始めるか
   int _maxTempo = 180; // どこまで加速するか
@@ -52,16 +52,16 @@ class _HomeState extends State<Home> {
     }
   }
 
-  /// 無限ループさせる
+  /// 無限ループするメトロノーム
   Future<void> _runMetronome() async {
     int waitTime;
     int soundId = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
       return pool.load(soundData);
     });
-    var count = 0;
+    var count = 0; // 何拍打ったか数える
     while(_run) {
       waitTime  = 60000 ~/ _tempo;
-      await pool.play(soundId);
+      pool.play(soundId);
       await Future.delayed(Duration(milliseconds: waitTime));
       count++;
       // TODO: 4分の4拍子以外の対応
