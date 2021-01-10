@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +17,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: Home(title: 'とりあえず音を出す'),
     );
   }
 }
@@ -30,9 +33,24 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  ByteData sound;
   int _counter = 0;
 
-  void _incrementCounter() {
+  /// 無限ループさせる
+  Future<void> runMetronome(int bpm) async {
+    AssetsAudioPlayer assetsAudioPlayer = AssetsAudioPlayer();
+    var audio = Audio('assets/sound/hammer.wav');
+    var waitTime  = 60000 ~/ bpm;
+    print(waitTime);
+
+    for (int i = 0; i < 20; i++) {
+      await assetsAudioPlayer.open(audio);
+      await Future.delayed(Duration(milliseconds: waitTime));
+    }
+  }
+
+  void _incrementCounter()  {
+    runMetronome(120);
     setState(() {
       _counter++;
     });
@@ -56,14 +74,15 @@ class _HomeState extends State<Home> {
               '$_counter',
               style: Theme.of(context).textTheme.headline4,
             ),
+            FlatButton(
+              child: const Text('Button'),
+              color: Colors.orange,
+              textColor: Colors.white,
+              onPressed: _incrementCounter,
+            ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
