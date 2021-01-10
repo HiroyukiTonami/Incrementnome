@@ -17,7 +17,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(title: 'メトロノームのオンオフとして動かす'),
+      home: Home(title: 'BPMを設定出来るようにする'),
     );
   }
 }
@@ -44,19 +44,18 @@ class _HomeState extends State<Home> {
     }
     else {
       setState(() => _run = true);
-      _runMetronome(_tempo);
+      _runMetronome();
     }
   }
 
   /// 無限ループさせる
-  Future<void> _runMetronome(int bpm) async {
+  Future<void> _runMetronome() async {
+    int waitTime;
     int soundId = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
       return pool.load(soundData);
     });
-    var waitTime  = 60000 ~/ bpm;
-    print(waitTime);
-
     while(_run) {
+      waitTime  = 60000 ~/ _tempo;
       await pool.play(soundId);
       await Future.delayed(Duration(milliseconds: waitTime));
     }
@@ -79,6 +78,18 @@ class _HomeState extends State<Home> {
             Text(
               '$_tempo',
               style: Theme.of(context).textTheme.headline4,
+            ),
+            Slider(
+              value: _tempo.toDouble(),
+              min: 10,
+              max: 200,
+              divisions: 200,
+              label: _tempo.toString(),
+              onChanged: (double value) {
+                setState(() {
+                  _tempo = value.toInt();
+                });
+              },
             ),
             FlatButton(
               child: const Text('ON / OFF'),
