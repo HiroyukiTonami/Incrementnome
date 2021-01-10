@@ -18,7 +18,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(title: 'あと何拍で速さが変わるか表示'),
+      home: Home(title: '拍が変わるタイミングで効果音を鳴らす'),
     );
   }
 }
@@ -41,7 +41,9 @@ class _HomeState extends State<Home> {
   int _maxTempo = 180; // どこまで加速するか
   int _tempo = 120;
   bool _run = false;
-  Soundpool pool = Soundpool(streamType: StreamType.alarm);
+  Soundpool beatPool = Soundpool(streamType: StreamType.alarm);
+  Soundpool finishPool = Soundpool(streamType: StreamType.alarm);
+
 
   void _toggleMetronome() {
     if (_run) {
@@ -63,20 +65,25 @@ class _HomeState extends State<Home> {
   /// 無限ループするメトロノーム
   Future<void> _runMetronome() async {
     int waitTime;
-    int soundId = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
-      return pool.load(soundData);
+    int beat = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
+      return beatPool.load(soundData);
+    });
+    int finish = await rootBundle.load('assets/sound/finish.wav').then((ByteData soundData) {
+      return finishPool.load(soundData);
     });
     while(_run) {
       waitTime  = 60000 ~/ _tempo;
-      pool.play(soundId);
-      await Future.delayed(Duration(milliseconds: waitTime));
+      beatPool.play(beat);
       setState(() => _remainBeat = _remainBeat - 1);
-      // TODO: 4分の4拍子以外の対応
+      await Future.delayed(Duration(milliseconds: waitTime));
       if (_tempo < _maxTempo && _remainBeat == 0) {
+        await finishPool.play(finish);
         setState(() {
           _tempo = _tempo + _stepSize;
           _remainBeat = calcBeatPerLoop();
         });
+        // その時のテンポに合わせてインターバルを設定しないと違和感が出る
+        await Future.delayed(Duration(milliseconds: 60000 * 4 ~/ _tempo));
       }
     }
   }
