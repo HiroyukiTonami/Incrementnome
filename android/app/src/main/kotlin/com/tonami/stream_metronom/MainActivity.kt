@@ -1,4 +1,4 @@
-package com.tonami.stream_metronom
+package com.tonami.incrementnome
 
 import io.flutter.embedding.android.FlutterActivity
 

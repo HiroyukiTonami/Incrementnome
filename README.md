@@ -1,4 +1,4 @@
-# stream_metronom
+# incrementnome
 
 だんだん早くなっていくメトロノーム
 
