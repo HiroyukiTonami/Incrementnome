@@ -18,7 +18,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(title: '各パラメータを設定出来る'),
+      home: Home(title: 'リセットボタン付ける。状態に応じてボタン変化させる。'),
     );
   }
 }
@@ -161,6 +161,7 @@ class _HomeState extends State<Home> {
                     onSelectedItemChanged: (int value) {
                       setState(() {
                         _startTempo = value+1;
+                        _tempo = _startTempo;
                       });
                     },
                   ),
@@ -194,14 +195,13 @@ class _HomeState extends State<Home> {
                 Spacer(),
               ],
             ),
-            Container(height: 100,),
-
+            Container(height: 90),
             Text(
               'BPM: ',
             ),
             Text(
               '$_tempo',
-              style: Theme.of(context).textTheme.headline4,
+              style: Theme.of(context).textTheme.headline3,
             ),
             Slider(
               value: _tempo.toDouble(),
@@ -215,12 +215,27 @@ class _HomeState extends State<Home> {
                 });
               },
             ),
-            FlatButton(
-              child: const Text('ON / OFF'),
-              color: Colors.orange,
-              textColor: Colors.white,
-              onPressed: _toggleMetronome,
-            ),
+            Row(
+              children: [
+                Spacer(),
+                FlatButton(
+                  child: Text('RESET'),
+                  color: Colors.green,
+                  textColor: Colors.white,
+                  onPressed: () {
+                    setState(() => {_tempo = _startTempo});
+                  },
+                ),
+                Spacer(),
+                FlatButton(
+                  child: Text(_run ? 'STOP' : 'GO'),
+                  color: _run ? Colors.blue : Colors.orange,
+                  textColor: Colors.white,
+                  onPressed: _toggleMetronome,
+                ),
+                Spacer(),
+              ],
+            )
           ],
         ),
       ),
