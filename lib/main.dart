@@ -18,7 +18,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(title: '拍が変わるタイミングで効果音を鳴らす'),
+      home: Home(title: 'Incrementnome'),
     );
   }
 }
@@ -43,6 +43,7 @@ class _HomeState extends State<Home> {
   bool _run = false;
   Soundpool beatPool = Soundpool(streamType: StreamType.alarm);
   Soundpool finishPool = Soundpool(streamType: StreamType.alarm);
+  Soundpool clickPool = Soundpool(streamType: StreamType.alarm);
 
 
   void _toggleMetronome() {
@@ -71,6 +72,9 @@ class _HomeState extends State<Home> {
     int finish = await rootBundle.load('assets/sound/finish.wav').then((ByteData soundData) {
       return finishPool.load(soundData);
     });
+    int click = await rootBundle.load('assets/sound/click.wav').then((ByteData soundData) {
+      return clickPool.load(soundData);
+    });
     while(_run) {
       waitTime  = 60000 ~/ _tempo;
       beatPool.play(beat);
@@ -84,6 +88,12 @@ class _HomeState extends State<Home> {
         });
         // その時のテンポに合わせてインターバルを設定しないと違和感が出る
         await Future.delayed(Duration(milliseconds: 60000 * 4 ~/ _tempo));
+        // 入の4カウント
+        waitTime  = 60000 ~/ _tempo;
+        for(int i = 0; i < 4; i++) {
+          await clickPool.play(click);
+          await Future.delayed(Duration(milliseconds: waitTime));
+        }
       }
     }
   }
