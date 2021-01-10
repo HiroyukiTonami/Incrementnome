@@ -18,7 +18,7 @@ class Incrementnome extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(title: 'リセットボタン付ける。状態に応じてボタン変化させる。'),
+      home: Home(title: 'あと何拍で速さが変わるか表示'),
     );
   }
 }
@@ -36,6 +36,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _stepSize = 5; // 何BPM加速するか
   int _bar = 4; // 何小節で1ループとするか
+  int _remainBeat = 16; // あと何拍で次のテンポに移るか
   int _startTempo = 120; // どこから始めるか
   int _maxTempo = 180; // どこまで加速するか
   int _tempo = 120;
@@ -52,22 +53,30 @@ class _HomeState extends State<Home> {
     }
   }
 
+  /// 何拍でループが終わるかを計算する。
+  ///
+  /// TODO: 4分の4拍子以外の対応
+  int calcBeatPerLoop() {
+    return _bar * 4;
+  }
+
   /// 無限ループするメトロノーム
   Future<void> _runMetronome() async {
     int waitTime;
     int soundId = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
       return pool.load(soundData);
     });
-    var count = 0; // 何拍打ったか数える
     while(_run) {
       waitTime  = 60000 ~/ _tempo;
       pool.play(soundId);
       await Future.delayed(Duration(milliseconds: waitTime));
-      count++;
+      setState(() => _remainBeat = _remainBeat - 1);
       // TODO: 4分の4拍子以外の対応
-      if (_tempo < _maxTempo && count == _bar * 4) {
-        setState(() => _tempo = _tempo + _stepSize);
-        count = 0;
+      if (_tempo < _maxTempo && _remainBeat == 0) {
+        setState(() {
+          _tempo = _tempo + _stepSize;
+          _remainBeat = calcBeatPerLoop();
+        });
       }
     }
   }
@@ -132,6 +141,7 @@ class _HomeState extends State<Home> {
                     onSelectedItemChanged: (int value) {
                       setState(() {
                         _bar = value+1;
+                        _remainBeat = calcBeatPerLoop();
                       });
                     },
                   ),
@@ -196,8 +206,19 @@ class _HomeState extends State<Home> {
               ],
             ),
             Container(height: 90),
+            Row(
+              children: [
+                Spacer(),
+                Text(
+                  '残り$_remainBeat拍',
+                  style: TextStyle(fontSize: 30),
+                ),
+                Spacer(),
+              ],
+            ),
+            Container(height: 10),
             Text(
-              'BPM: ',
+              'now BPM',
             ),
             Text(
               '$_tempo',
@@ -223,7 +244,10 @@ class _HomeState extends State<Home> {
                   color: Colors.green,
                   textColor: Colors.white,
                   onPressed: () {
-                    setState(() => {_tempo = _startTempo});
+                    setState(() {
+                      _tempo = _startTempo;
+                      _remainBeat = calcBeatPerLoop();
+                    });
                   },
                 ),
                 Spacer(),
