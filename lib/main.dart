@@ -64,9 +64,15 @@ class _HomeState extends State<Home> {
     return _bar * 4;
   }
 
+  ///音を再生し、再生にかかった時間をmillisecで返す。
+  Future<int> playSound(Soundpool pool, int soundId) async {
+    final lastTime = DateTime.now();
+    await pool.play(soundId);
+    return DateTime.now().difference(lastTime).inMilliseconds;
+  }
+
   /// 無限ループするメトロノーム
   Future<void> _runMetronome() async {
-    int waitTime;
     int beat = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
       return beatPool.load(soundData);
     });
@@ -76,24 +82,24 @@ class _HomeState extends State<Home> {
     int click = await rootBundle.load('assets/sound/click.wav').then((ByteData soundData) {
       return clickPool.load(soundData);
     });
+
+    int soundLength;
     while(_run) {
-      waitTime  = 60000 ~/ _tempo;
-      beatPool.play(beat);
+      soundLength = await playSound(beatPool, beat);
       setState(() => _remainBeat = max(_remainBeat - 1, 0));
-      await Future.delayed(Duration(milliseconds: waitTime));
+      await Future.delayed(Duration(milliseconds: (60000 ~/ _tempo) - soundLength));
       if (_tempo < _maxTempo && _remainBeat == 0) {
-        await finishPool.play(finish);
+        soundLength = await playSound(finishPool, finish);
         setState(() {
           _tempo = _tempo + _stepSize;
           _remainBeat = calcBeatPerLoop();
         });
         // その時のテンポに合わせてインターバルを設定しないと違和感が出る
-        await Future.delayed(Duration(milliseconds: 60000 * 4 ~/ _tempo));
+        await Future.delayed(Duration(milliseconds: (60000 * 4 ~/ _tempo) - soundLength));
         // 入の4カウント
-        waitTime  = 60000 ~/ _tempo;
         for(int i = 0; i < 4; i++) {
-          await clickPool.play(click);
-          await Future.delayed(Duration(milliseconds: waitTime));
+          soundLength = await playSound(clickPool, click);
+          await Future.delayed(Duration(milliseconds: (60000 ~/ _tempo) - soundLength));
         }
       }
     }
