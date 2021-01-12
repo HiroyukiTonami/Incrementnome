@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +79,7 @@ class _HomeState extends State<Home> {
     while(_run) {
       waitTime  = 60000 ~/ _tempo;
       beatPool.play(beat);
-      setState(() => _remainBeat = _remainBeat - 1);
+      setState(() => _remainBeat = max(_remainBeat - 1, 0));
       await Future.delayed(Duration(milliseconds: waitTime));
       if (_tempo < _maxTempo && _remainBeat == 0) {
         await finishPool.play(finish);
