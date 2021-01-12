@@ -98,8 +98,8 @@ class _HomeState extends State<Home> {
     }
   }
 
-  /// cupatinoPickerの子供として設定すると自然に見えるウィジェットを作る
-  Widget cupatinoPickerChild(String text) {
+  /// cupertinoPickerの子供として設定すると自然に見えるウィジェットを作る
+  Widget cupertinoPickerChild(String text) {
     return Center(
       child: Text(
         text,
@@ -131,7 +131,7 @@ class _HomeState extends State<Home> {
                   width: 50,
                   child: CupertinoPicker(
                     itemExtent: 40,
-                    children: List.generate(10, (i)=> cupatinoPickerChild((i+1).toString())),
+                    children: List.generate(10, (i)=> cupertinoPickerChild((i+1).toString())),
                     scrollController: FixedExtentScrollController(initialItem: _stepSize-1),
                     onSelectedItemChanged: (int value) {
                       setState(() {
@@ -153,7 +153,7 @@ class _HomeState extends State<Home> {
                   width: 50,
                   child: CupertinoPicker(
                     itemExtent: 40,
-                    children: List.generate(20, (i)=> cupatinoPickerChild((i+1).toString())),
+                    children: List.generate(20, (i)=> cupertinoPickerChild((i+1).toString())),
                     scrollController: FixedExtentScrollController(initialItem: _bar-1),
                     onSelectedItemChanged: (int value) {
                       setState(() {
@@ -183,7 +183,7 @@ class _HomeState extends State<Home> {
                   width: 50,
                   child: CupertinoPicker(
                     itemExtent: 40,
-                    children: List.generate(200, (i)=> cupatinoPickerChild((i+1).toString())),
+                    children: List.generate(200, (i)=> cupertinoPickerChild((i+1).toString())),
                     scrollController: FixedExtentScrollController(initialItem: _startTempo-1),
                     onSelectedItemChanged: (int value) {
                       setState(() {
@@ -206,7 +206,7 @@ class _HomeState extends State<Home> {
                   width: 50,
                   child: CupertinoPicker(
                     itemExtent: 40,
-                    children: List.generate(200, (i)=> cupatinoPickerChild((i+1).toString())),
+                    children: List.generate(200, (i)=> cupertinoPickerChild((i+1).toString())),
                     scrollController: FixedExtentScrollController(initialItem: _maxTempo-1),
                     onSelectedItemChanged: (int value) {
                       setState(() {
