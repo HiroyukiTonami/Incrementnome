@@ -64,11 +64,11 @@ class _HomeState extends State<Home> {
     return _bar * 4;
   }
 
-  ///音を再生し、再生にかかった時間をmillisecで返す。
+  ///音を再生し、再生にかかった時間をmicrosecondsで返す。
   Future<int> playSound(Soundpool pool, int soundId) async {
     final lastTime = DateTime.now();
     await pool.play(soundId);
-    return DateTime.now().difference(lastTime).inMilliseconds;
+    return DateTime.now().difference(lastTime).inMicroseconds;
   }
 
   /// 無限ループするメトロノーム
@@ -87,7 +87,7 @@ class _HomeState extends State<Home> {
     while(_run) {
       soundLength = await playSound(beatPool, beat);
       setState(() => _remainBeat = max(_remainBeat - 1, 0));
-      await Future.delayed(Duration(milliseconds: (60000 ~/ _tempo) - soundLength));
+      await Future.delayed(Duration(microseconds: (60000000 ~/ _tempo) - soundLength));
       if (_tempo < _maxTempo && _remainBeat == 0) {
         soundLength = await playSound(finishPool, finish);
         setState(() {
@@ -95,11 +95,11 @@ class _HomeState extends State<Home> {
           _remainBeat = calcBeatPerLoop();
         });
         // その時のテンポに合わせてインターバルを設定しないと違和感が出る
-        await Future.delayed(Duration(milliseconds: (60000 * 4 ~/ _tempo) - soundLength));
+        await Future.delayed(Duration(microseconds: (60000000 * 4 ~/ _tempo) - soundLength));
         // 入の4カウント
         for(int i = 0; i < 4; i++) {
           soundLength = await playSound(clickPool, click);
-          await Future.delayed(Duration(milliseconds: (60000 ~/ _tempo) - soundLength));
+          await Future.delayed(Duration(microseconds: (60000000 ~/ _tempo) - soundLength));
         }
       }
     }
