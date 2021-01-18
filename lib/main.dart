@@ -98,19 +98,21 @@ class _HomeState extends State<Home> {
     if(!_run) {
       t.cancel();
     }
-    beatPool.play(beat);
-    setState(() => _remainBeat = max(_remainBeat - 1, 0));
 
-    if(_remainBeat == 0) {
+    if(_remainBeat == 0 && _tempo < _maxTempo) {
       t.cancel();
       finishPool.play(finish);
+
       // 値の更新
       setState(() {
         _tempo = _tempo + _stepSize;
         _remainBeat = calcBeatPerLoop();
       });
-      var duration = Duration(microseconds: (60000000 ~/ _tempo)); // _tempo = 120;
+      var duration = Duration(microseconds: (60000000 ~/ _tempo));
       Timer.periodic(duration, (Timer t) => _preBeat(t, duration));
+    } else {
+      beatPool.play(beat);
+      setState(() => _remainBeat = max(_remainBeat - 1, 0));
     }
   }
 
@@ -300,6 +302,7 @@ class _HomeState extends State<Home> {
                   textColor: Colors.white,
                   onPressed: () {
                     setState(() {
+                      _run = false;
                       _tempo = _startTempo;
                       _remainBeat = calcBeatPerLoop();
                     });
