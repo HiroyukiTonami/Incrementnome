@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soundpool/soundpool.dart';
+import 'Dart:async';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,10 +43,37 @@ class _HomeState extends State<Home> {
   int _startTempo = 120; // どこから始めるか
   int _maxTempo = 180; // どこまで加速するか
   int _tempo = 120;
+  int _preCount = 0;
   bool _run = false;
   Soundpool beatPool = Soundpool(streamType: StreamType.alarm);
+  int beat;
   Soundpool finishPool = Soundpool(streamType: StreamType.alarm);
+  int finish;
   Soundpool clickPool = Soundpool(streamType: StreamType.alarm);
+  int click;
+  DateTime check = DateTime.now();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+
+    Future(() async {
+      beat = await rootBundle.load('assets/sound/hammer.wav').then((
+          ByteData soundData) {
+        return beatPool.load(soundData);
+      });
+      finish = await rootBundle.load('assets/sound/finish.wav').then((
+          ByteData soundData) {
+        return finishPool.load(soundData);
+      });
+      click = await rootBundle.load('assets/sound/click.wav').then((
+          ByteData soundData) {
+        return clickPool.load(soundData);
+      });
+    });
+  }
 
 
   void _toggleMetronome() {
@@ -64,45 +93,47 @@ class _HomeState extends State<Home> {
     return _bar * 4;
   }
 
-  ///音を再生し、再生にかかった時間をmicrosecondsで返す。
-  Future<int> playSound(Soundpool pool, int soundId) async {
-    final lastTime = DateTime.now();
-    await pool.play(soundId);
-    return DateTime.now().difference(lastTime).inMicroseconds;
+  /// Timerで繰り返し処理する用の音源再生くん
+  void _beat(Timer t) {
+    if(!_run) {
+      t.cancel();
+    }
+    beatPool.play(beat);
+    setState(() => _remainBeat = max(_remainBeat - 1, 0));
+
+    if(_remainBeat == 0) {
+      t.cancel();
+      finishPool.play(finish);
+      // 値の更新
+      setState(() {
+        _tempo = _tempo + _stepSize;
+        _remainBeat = calcBeatPerLoop();
+      });
+      var duration = Duration(microseconds: (60000000 ~/ _tempo)); // _tempo = 120;
+      Timer.periodic(duration, (Timer t) => _preBeat(t, duration));
+    }
+  }
+
+  /// Timerで繰り返し処理する用の4カウント再生くん
+  void _preBeat(Timer t, duration) {
+    if(!_run) {
+      t.cancel();
+    }
+    _preCount++;
+    clickPool.play(click);
+    if (_preCount == 4) {
+      t.cancel();
+      setState(() {
+        _preCount = 0;
+      });
+      Timer.periodic(duration, (Timer t) => _beat(t));
+    }
   }
 
   /// 無限ループするメトロノーム
-  Future<void> _runMetronome() async {
-    int beat = await rootBundle.load('assets/sound/hammer.wav').then((ByteData soundData) {
-      return beatPool.load(soundData);
-    });
-    int finish = await rootBundle.load('assets/sound/finish.wav').then((ByteData soundData) {
-      return finishPool.load(soundData);
-    });
-    int click = await rootBundle.load('assets/sound/click.wav').then((ByteData soundData) {
-      return clickPool.load(soundData);
-    });
-
-    int soundLength;
-    while(_run) {
-      soundLength = await playSound(beatPool, beat);
-      setState(() => _remainBeat = max(_remainBeat - 1, 0));
-      await Future.delayed(Duration(microseconds: (60000000 ~/ _tempo) - soundLength));
-      if (_tempo < _maxTempo && _remainBeat == 0) {
-        soundLength = await playSound(finishPool, finish);
-        setState(() {
-          _tempo = _tempo + _stepSize;
-          _remainBeat = calcBeatPerLoop();
-        });
-        // その時のテンポに合わせてインターバルを設定しないと違和感が出る
-        await Future.delayed(Duration(microseconds: (60000000 * 4 ~/ _tempo) - soundLength));
-        // 入の4カウント
-        for(int i = 0; i < 4; i++) {
-          soundLength = await playSound(clickPool, click);
-          await Future.delayed(Duration(microseconds: (60000000 ~/ _tempo) - soundLength));
-        }
-      }
-    }
+  void _runMetronome() {
+    var duration = Duration(microseconds: (60000000 ~/ _tempo)); // _tempo = 120;
+    Timer.periodic(duration, (Timer t) => _beat(t));
   }
 
   /// cupertinoPickerの子供として設定すると自然に見えるウィジェットを作る
